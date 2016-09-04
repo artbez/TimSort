@@ -12,16 +12,16 @@ import java.util.function.BinaryOperator;
  */
 
 // This class sorts the array of Comparable objects
-public class TimSort<T extends Comparable<T>> {
+public class TimSort {
 
 	// Initial array
-	private T[] array;
+	private int[] array;
 	// The minimum size of subarrays in the initial array 
 	private int minrun = 0;
 	// Stack of pairs with index of begin of subarray and its length 
 	private Stack<Pair> stack;
 	
-	public T[] apply(T[] array) {
+	public int[] apply(int[] array) {
 		this.array = array;
 		stack = new Stack<Pair>();
 		minrun = getMinrun();
@@ -43,14 +43,13 @@ public class TimSort<T extends Comparable<T>> {
 	private void prepareArray() {
 		int i = 0;
 		int j = 0;
-		minrun = 3;
 		while (i < array.length) {
 			j = i;
-			while(j < array.length - 1 && array[j].compareTo(array[j + 1]) > 0) {
+			while(j < array.length - 1 && array[j] > array[j + 1]) {
 				j++;
 			}
 			reverseInitialArray(i, j);
-			while(j < array.length - 1 && array[j].compareTo(array[j + 1]) <= 0) {
+			while(j < array.length - 1 && array[j] <= array[j + 1]) {
 				j++;
 			}
 			int localLength = Math.min(Math.max(j - i + 1, minrun), array.length - i);
@@ -72,8 +71,8 @@ public class TimSort<T extends Comparable<T>> {
 						mergeStackArrays(elementX, elementY);
 					} else {
 						stack.pop();
-						stack.push(elementX);
 						mergeStackArrays(elementY, elementZ);
+						stack.push(elementX);			
 					}
 				} else {
 					mergeStackArrays(elementX, elementY);
@@ -86,20 +85,20 @@ public class TimSort<T extends Comparable<T>> {
 		if (array.length == 0)
 			return;
 		@SuppressWarnings("unchecked")
-		BinaryOperator<T[]> merge = (t,u) -> {
-			T[] result = (T[]) Array.newInstance(array[0].getClass(), t.length + u.length);
+		BinaryOperator<int[]> merge = (t,u) -> {
+			int[] result = new int[t.length + u.length];
             for (int i = 0, j = 0, k = 0; i < result.length; i++){
                 if( j == t.length){
                     result[i] = u[k++];
                 } else if (k == u.length) {
                     result[i] = t[j++];
                 } else {
-                    result[i] = (t[j] .compareTo(u [k]) < 0) ? t[j++] : u[k++];
+                    result[i] = (t[j] < u[k]) ? t[j++] : u[k++];
                 }
             }
             return result;
         };
-		T[] current = merge.apply(Arrays.copyOfRange(array, p1.indexOfBegin, p1.indexOfBegin + p1.length), 
+		int[] current = merge.apply(Arrays.copyOfRange(array, p1.indexOfBegin, p1.indexOfBegin + p1.length), 
 				Arrays.copyOfRange(array, p2.indexOfBegin, p2.indexOfBegin + p2.length));
 		for (int i = Math.min(p1.indexOfBegin, p2.indexOfBegin); i < Math.min(p1.indexOfBegin, p2.indexOfBegin) + p1.length + p2.length; ++i) {
 			array[i] = current[i - Math.min(p1.indexOfBegin, p2.indexOfBegin)];
@@ -118,7 +117,7 @@ public class TimSort<T extends Comparable<T>> {
 	}
 	
 	private void swap(int i, int j) {
-		T tmp = array[i];
+		int tmp = array[i];
 		array[i] = array[j];
 		array[j] = tmp;
 	}
@@ -132,7 +131,7 @@ public class TimSort<T extends Comparable<T>> {
 	private void insertSort(int start, int end) {
 		for (int i = start + 1; i < end; ++i) {
 			int j = i;
-			while (j > start && array[j].compareTo(array[j - 1]) < 0)
+			while (j > start && array[j]< array[j - 1])
 			{
 				swap(j, j - 1);
 				j--;
