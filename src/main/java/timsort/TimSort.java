@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Stack;
 import java.util.function.BinaryOperator;
+import static org.junit.Assert.*;
 
 /**
  * It's an implementation of Tim's Sorting algorithm
@@ -53,7 +54,7 @@ public class TimSort {
 				j++;
 			}
 			int localLength = Math.min(Math.max(j - i + 1, minrun), array.length - i);
-			insertSort(i, i + localLength);
+			insertBinarySort(i, i + localLength);
 			stack.push(new Pair(i, localLength));
 			i += localLength;
 		}
@@ -84,26 +85,73 @@ public class TimSort {
 	private void mergeStackArrays(Pair p1, Pair p2) {
 		if (array.length == 0)
 			return;
-		@SuppressWarnings("unchecked")
-		BinaryOperator<int[]> merge = (t,u) -> {
-			int[] result = new int[t.length + u.length];
-            for (int i = 0, j = 0, k = 0; i < result.length; i++){
-                if( j == t.length){
-                    result[i] = u[k++];
-                } else if (k == u.length) {
-                    result[i] = t[j++];
-                } else {
-                    result[i] = (t[j] < u[k]) ? t[j++] : u[k++];
-                }
+		
+		int[] result = new int[p1.length + p2.length];
+		int count = 0;
+        for (int i = 0, j = 0, k = 0; i < result.length; i++){
+            if( j == p1.length){
+                System.arraycopy(array, p2.indexOfBegin + k, result, i, p2.length - k);
+                break;
+            } else if (k == p2.length) {
+            	System.arraycopy(array, p1.indexOfBegin + j, result, i, p1.length - j);
+            	break;
+            } else {
+
+                if (count >= 7) {
+                	int temp = array[p2.indexOfBegin + k];
+                    int left=p1.indexOfBegin + j;
+                    int right=p1.indexOfBegin + p1.length;
+                    while (left<right){
+                        int middle=(left+right)/2;
+                        if (temp>=array[middle])
+                            left=middle+1;
+                        else
+                             right=middle;
+                    }    
+                    System.arraycopy(array, p1.indexOfBegin + j, result, i, left-p1.indexOfBegin-j);
+                    count = 0;
+                    i += left - p1.indexOfBegin - j - 1;
+                    j = left - p1.indexOfBegin;
+                    continue;
+            	} 
+                
+                if (count <= -7) {
+                	int temp = array[p1.indexOfBegin + j];
+                    int left=p2.indexOfBegin + k;
+                    int right=p2.indexOfBegin + p2.length;
+                    while (left<right){
+                        int middle=(left+right)/2;
+                        if (temp>=array[middle])
+                            left=middle+1;
+                        else
+                             right=middle;
+                    }    
+                    System.arraycopy(array, p2.indexOfBegin + k, result, i, left-p2.indexOfBegin-k);
+                    count = 0;
+                    i += left - p2.indexOfBegin - k - 1;
+                    k = left - p2.indexOfBegin;
+                    continue;
+            	} 
+
+            	if (array[p1.indexOfBegin + j] < array[p2.indexOfBegin + k]) {
+            		result[i] = array[p1.indexOfBegin +j++];
+            		if (count > 0)
+            			count++;
+            		else
+            			count = 1;
+            	} else {
+            		result[i] = array[p2.indexOfBegin + k++];
+            		if (count < 0)
+            			count--;
+            		else
+            			count = -1;
+            	}
             }
-            return result;
-        };
-		int[] current = merge.apply(Arrays.copyOfRange(array, p1.indexOfBegin, p1.indexOfBegin + p1.length), 
-				Arrays.copyOfRange(array, p2.indexOfBegin, p2.indexOfBegin + p2.length));
-		for (int i = Math.min(p1.indexOfBegin, p2.indexOfBegin); i < Math.min(p1.indexOfBegin, p2.indexOfBegin) + p1.length + p2.length; ++i) {
-			array[i] = current[i - Math.min(p1.indexOfBegin, p2.indexOfBegin)];
-		}
-		stack.push(new Pair(Math.min(p1.indexOfBegin, p2.indexOfBegin), p1.length + p2.length));
+        }
+    
+		int ll = Math.min(p1.indexOfBegin, p2.indexOfBegin);
+		System.arraycopy(result, 0, array, ll, result.length);
+		stack.push(new Pair(ll, p1.length + p2.length));
 	}
 	
 	private class Pair {
@@ -128,14 +176,15 @@ public class TimSort {
 		}
 	}
 	
-	private void insertSort(int start, int end) {
+	private void insertBinarySort(int start, int end) {
 		for (int i = start + 1; i < end; ++i) {
 			int j = i;
-			while (j > start && array[j]< array[j - 1])
+			while (j > start && array[j]< (array[j - 1]))
 			{
 				swap(j, j - 1);
 				j--;
 			}
 		}
 	}
+	
 }
