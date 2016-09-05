@@ -199,12 +199,18 @@ public class TimSorter {
 	
 	private void insertBinarySort(int start, int end) {
 		for (int i = start + 1; i < end; ++i) {
-			int j = i;
-			while (j > start && array[j]< (array[j - 1]))
-			{
-				swap(j, j - 1);
-				j--;
-			}
+			int tmp = array[i];
+			int left = start;
+	        int right = i;
+	        while (left < right){
+	            int middle = (left + right) / 2;
+	            if (tmp >= array[middle])
+	                left=middle + 1;
+	            else
+	                 right=middle;
+	        }
+	        System.arraycopy(array, left, array, left + 1, i - left);
+	        array[left] = tmp;
 		}
 	}
 	
