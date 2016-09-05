@@ -14,8 +14,8 @@ import static org.junit.Assert.*;
 
 public class IntSortTest {
 	public static final int SEED = 1;
-	public static final int ARRAY_SIZE = 1000000;
-	public static final TimSort timSorter = new TimSort();
+	public static final int ARRAY_SIZE = 10000000;
+	public static final TimSorter timSorter = new TimSorter();
 
 	/**
 	 *
@@ -34,17 +34,21 @@ public class IntSortTest {
 		}
 		return array;
 	}
-
+	
 	@Test
 	public void testSortArray() throws Exception {
 		int array[] = generateRandomIntArray(ARRAY_SIZE, SEED);
-
+		int array2[] = array.clone();
 		// сортируем массив и замеряем время работы
 		long startTime = System.nanoTime();
 		timSorter.apply(array);
 		long estimatedTime = System.nanoTime() - startTime;
-		System.out.println("Execution time(ms) " + (estimatedTime / 1000000));
-
+		System.out.println("Timsort execution time(ms) " + (estimatedTime / 1000000));
+		startTime = System.nanoTime();
+		Arrays.sort(array);
+		estimatedTime = System.nanoTime() - startTime;
+		System.out.println("Arrays.sort execution time(ms) " + (estimatedTime / 1000000));
+		
 		// проверяем правильность сортировки
 		int previousValue = Integer.MIN_VALUE;
 		for (int i = 0; i < array.length; i++) {

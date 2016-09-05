@@ -4,7 +4,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Stack;
 import java.util.function.BinaryOperator;
-import static org.junit.Assert.*;
+
 
 /**
  * It's an implementation of Tim's Sorting algorithm
@@ -13,15 +13,19 @@ import static org.junit.Assert.*;
  */
 
 // This class sorts the array of Comparable objects
-public class TimSort {
+public class TimSorter {
 
 	// Initial array
 	private int[] array;
 	// The minimum size of subarrays in the initial array 
-	private int minrun = 0;
+	private int minrun = 64;
 	// Stack of pairs with index of begin of subarray and its length 
 	private Stack<Pair> stack;
 	
+	private int stackSize = 0;
+	
+	private final int CONST_FOR_GALOP = 7;
+
 	public int[] apply(int[] array) {
 		this.array = array;
 		stack = new Stack<Pair>();
@@ -55,37 +59,57 @@ public class TimSort {
 			}
 			int localLength = Math.min(Math.max(j - i + 1, minrun), array.length - i);
 			insertBinarySort(i, i + localLength);
-			stack.push(new Pair(i, localLength));
 			i += localLength;
 		}
 	}
 	
 	private void mergeInside() {
-		while (!stack.isEmpty()) {
-			Pair elementX = stack.pop();
-			if (!stack.isEmpty()) {
-				Pair elementY = stack.pop();
-				if (!stack.isEmpty()) {
-					Pair elementZ = stack.peek();
-					if ((elementX.length > elementY.length + elementZ.length && elementY.length > elementZ.length)
-							|| (elementX.length < elementZ.length)) {
-						mergeStackArrays(elementX, elementY);
-					} else {
-						stack.pop();
-						mergeStackArrays(elementY, elementZ);
-						stack.push(elementX);			
-					}
-				} else {
-					mergeStackArrays(elementX, elementY);
-				}
+		
+		int ostLength = array.length;
+		int start = 0;
+		stackSize = 0;
+		do {
+           
+			int curRun = 1;
+			while (start + curRun < array.length && array[start + curRun] >= array[start + curRun - 1]) {
+				curRun++;
 			}
+	
+            stack.push(new Pair(start, curRun));
+            stackSize++;
+         
+            while (stackSize > 2) {
+            	Pair elementX = stack.pop();
+            	Pair elementY = stack.pop();
+            	Pair elementZ = stack.pop();
+            	stackSize -= 3;
+            	if (elementX.length <= elementY.length + elementZ.length && elementY.length <= elementZ.length) {
+            		if (elementX.length < elementZ.length) {
+            			stack.push(elementZ);
+            			stackSize++;
+            			mergeStackArrays(elementX, elementY);
+            		} else {
+            			mergeStackArrays(elementY, elementZ);
+            			stack.push(elementX);
+            			stackSize++;
+            		}
+            	} else {
+            		break;
+            	}
+            }
+       
+            start += curRun;
+            ostLength -= curRun;
+        } while (ostLength != 0);
+		
+		if (stackSize == 2) {
+			mergeStackArrays(stack.pop(), stack.pop());
+			stackSize -=2;
 		}
 	}
 	
+	
 	private void mergeStackArrays(Pair p1, Pair p2) {
-		if (array.length == 0)
-			return;
-		
 		int[] result = new int[p1.length + p2.length];
 		int count = 0;
         for (int i = 0, j = 0, k = 0; i < result.length; i++){
@@ -97,37 +121,19 @@ public class TimSort {
             	break;
             } else {
 
-                if (count >= 7) {
-                	int temp = array[p2.indexOfBegin + k];
-                    int left=p1.indexOfBegin + j;
-                    int right=p1.indexOfBegin + p1.length;
-                    while (left<right){
-                        int middle=(left+right)/2;
-                        if (temp>=array[middle])
-                            left=middle+1;
-                        else
-                             right=middle;
-                    }    
-                    System.arraycopy(array, p1.indexOfBegin + j, result, i, left-p1.indexOfBegin-j);
-                    count = 0;
+                if (count >= CONST_FOR_GALOP) {
+                	int tmp = array[p2.indexOfBegin + k];
+                 	int left = galop(i, p1.indexOfBegin +j, p1.indexOfBegin + p1.length, tmp, result);
+                	count = 0;
                     i += left - p1.indexOfBegin - j - 1;
                     j = left - p1.indexOfBegin;
                     continue;
             	} 
                 
-                if (count <= -7) {
-                	int temp = array[p1.indexOfBegin + j];
-                    int left=p2.indexOfBegin + k;
-                    int right=p2.indexOfBegin + p2.length;
-                    while (left<right){
-                        int middle=(left+right)/2;
-                        if (temp>=array[middle])
-                            left=middle+1;
-                        else
-                             right=middle;
-                    }    
-                    System.arraycopy(array, p2.indexOfBegin + k, result, i, left-p2.indexOfBegin-k);
-                    count = 0;
+                if (count <= -CONST_FOR_GALOP) {
+                	int tmp = array[p1.indexOfBegin + j];
+                	int left = galop(i, p2.indexOfBegin + k, p2.indexOfBegin + p2.length, tmp, result);
+                	count = 0;
                     i += left - p2.indexOfBegin - k - 1;
                     k = left - p2.indexOfBegin;
                     continue;
@@ -152,6 +158,21 @@ public class TimSort {
 		int ll = Math.min(p1.indexOfBegin, p2.indexOfBegin);
 		System.arraycopy(result, 0, array, ll, result.length);
 		stack.push(new Pair(ll, p1.length + p2.length));
+		stackSize++;
+	}
+	
+	private int galop(int i, int start, int end, int tmp, int[] result) {
+		int left = start;
+        int right = end;
+        while (left < right){
+            int middle = (left + right) / 2;
+            if (tmp >= array[middle])
+                left=middle + 1;
+            else
+                 right=middle;
+        }    
+        System.arraycopy(array, start, result, i, left - start);
+        return left;
 	}
 	
 	private class Pair {
