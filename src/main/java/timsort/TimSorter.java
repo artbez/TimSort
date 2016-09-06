@@ -20,19 +20,33 @@ public class TimSorter {
 	// The minimum size of subarrays in the initial array 
 	private int minrun = 64;
 	// Stack of pairs with index of begin of subarray and its length 
-	private Stack<Pair> stack;
+	private Stack<PairOfSubarray> stack;
 	
 	private int stackSize = 0;
 	
 	private final int CONST_FOR_GALOP = 7;
 
-	public int[] apply(int[] array) {
+	public int[] sort(int[] array) {
 		this.array = array;
-		stack = new Stack<Pair>();
+		stack = new Stack<PairOfSubarray>();
 		minrun = getMinrun();
 		prepareArray();
 		mergeInside();
 		return array;
+	}
+
+	private class PairOfSubarray {
+		int indexOfBegin;
+		int length;
+		
+		PairOfSubarray(int indexOfBegin, int length) {
+			this.indexOfBegin = indexOfBegin;
+			this.length = length;
+		}
+		
+		int getEndIndex() {
+			return indexOfBegin + length;
+		}
 	}
 	
 	private int getMinrun() {
@@ -64,7 +78,6 @@ public class TimSorter {
 	}
 	
 	private void mergeInside() {
-		
 		int ostLength = array.length;
 		int start = 0;
 		stackSize = 0;
@@ -75,13 +88,13 @@ public class TimSorter {
 				curRun++;
 			}
 	
-            stack.push(new Pair(start, curRun));
+            stack.push(new PairOfSubarray(start, curRun));
             stackSize++;
          
             while (stackSize > 2) {
-            	Pair elementX = stack.pop();
-            	Pair elementY = stack.pop();
-            	Pair elementZ = stack.pop();
+            	PairOfSubarray elementX = stack.pop();
+            	PairOfSubarray elementY = stack.pop();
+            	PairOfSubarray elementZ = stack.pop();
             	stackSize -= 3;
             	if (elementX.length <= elementY.length + elementZ.length && elementY.length <= elementZ.length) {
             		if (elementX.length < elementZ.length) {
@@ -108,81 +121,63 @@ public class TimSorter {
 		}
 	}
 	
-	
-	private void mergeStackArrays(Pair p1, Pair p2) {
+	private void mergeStackArrays(PairOfSubarray p1, PairOfSubarray p2) {
 		int[] result = new int[p1.length + p2.length];
 		int count = 0;
-        for (int i = 0, j = 0, k = 0; i < result.length; i++){
-            if( j == p1.length){
-                System.arraycopy(array, p2.indexOfBegin + k, result, i, p2.length - k);
+        for (int i = 0, j = p1.indexOfBegin, k = p2.indexOfBegin; i < result.length; i++){
+            if (j == p1.getEndIndex()){
+                System.arraycopy(array, k, result, i, p2.getEndIndex() - k);
                 break;
-            } else if (k == p2.length) {
-            	System.arraycopy(array, p1.indexOfBegin + j, result, i, p1.length - j);
+            }  
+            if (k == p2.getEndIndex()) {
+            	System.arraycopy(array, j, result, i, p1.getEndIndex() - j);
             	break;
+            } 
+
+            if (array[j] < array[k]) {
+            	result[i] = array[j++];
+            	count = count > 0 ? count++ : 1;
             } else {
-
-                if (count >= CONST_FOR_GALOP) {
-                	int tmp = array[p2.indexOfBegin + k];
-                 	int left = galop(i, p1.indexOfBegin +j, p1.indexOfBegin + p1.length, tmp, result);
-                	count = 0;
-                    i += left - p1.indexOfBegin - j - 1;
-                    j = left - p1.indexOfBegin;
-                    continue;
-            	} 
-                
-                if (count <= -CONST_FOR_GALOP) {
-                	int tmp = array[p1.indexOfBegin + j];
-                	int left = galop(i, p2.indexOfBegin + k, p2.indexOfBegin + p2.length, tmp, result);
-                	count = 0;
-                    i += left - p2.indexOfBegin - k - 1;
-                    k = left - p2.indexOfBegin;
-                    continue;
-            	} 
-
-            	if (array[p1.indexOfBegin + j] < array[p2.indexOfBegin + k]) {
-            		result[i] = array[p1.indexOfBegin +j++];
-            		if (count > 0)
-            			count++;
-            		else
-            			count = 1;
-            	} else {
-            		result[i] = array[p2.indexOfBegin + k++];
-            		if (count < 0)
-            			count--;
-            		else
-            			count = -1;
-            	}
+            	result[i] = array[k++];
+            	count = count < 0 ? count-- : -1;
             }
+            
+            if (count >= CONST_FOR_GALOP) {
+            	int tmp = array[k];
+             	int left = binSearch(j, p1.getEndIndex(), tmp);
+             	System.arraycopy(array, j, result, i, left - j);
+             	count = 0;
+                i += left - j - 1;
+                j = left;
+            } 
+                
+            if (count <= -CONST_FOR_GALOP) {
+            	int tmp = array[j];
+                int left = binSearch(k, p2.getEndIndex(), tmp);
+                System.arraycopy(array, k, result, i, left - k);
+                count = 0;
+                i += left - k - 1;
+                k = left - p2.indexOfBegin;
+            } 
         }
     
-		int ll = Math.min(p1.indexOfBegin, p2.indexOfBegin);
-		System.arraycopy(result, 0, array, ll, result.length);
-		stack.push(new Pair(ll, p1.length + p2.length));
+		int indexBegin = Math.min(p1.indexOfBegin, p2.indexOfBegin);
+		System.arraycopy(result, 0, array, indexBegin, result.length);
+		stack.push(new PairOfSubarray(indexBegin, p1.length + p2.length));
 		stackSize++;
 	}
 	
-	private int galop(int i, int start, int end, int tmp, int[] result) {
-		int left = start;
-        int right = end;
+	private int binSearch(int low, int hight, int tmp) {
+		int left = low;
+        int right = hight;
         while (left < right){
             int middle = (left + right) / 2;
             if (tmp >= array[middle])
                 left=middle + 1;
             else
                  right=middle;
-        }    
-        System.arraycopy(array, start, result, i, left - start);
+        }
         return left;
-	}
-	
-	private class Pair {
-		int indexOfBegin;
-		int length;
-		
-		Pair(int indexOfBegin, int length) {
-			this.indexOfBegin = indexOfBegin;
-			this.length = length;
-		}
 	}
 	
 	private void swap(int i, int j) {
@@ -191,24 +186,16 @@ public class TimSorter {
 		array[j] = tmp;
 	}
 	
-	private void reverseInitialArray(int start, int end) {
-		for (int i = start; i < (start + end + 1) / 2; ++i) {
-			swap(i, start + end - i);
+	private void reverseInitialArray(int low, int hight) {
+		for (int i = low; i < (low + hight + 1) / 2; ++i) {
+			swap(i, low + hight - i);
 		}
 	}
 	
-	private void insertBinarySort(int start, int end) {
-		for (int i = start + 1; i < end; ++i) {
+	private void insertBinarySort(int low, int hight) {
+		for (int i = low + 1; i < hight; ++i) {
 			int tmp = array[i];
-			int left = start;
-	        int right = i;
-	        while (left < right){
-	            int middle = (left + right) / 2;
-	            if (tmp >= array[middle])
-	                left=middle + 1;
-	            else
-	                 right=middle;
-	        }
+			int left = binSearch(low, i, tmp);
 	        System.arraycopy(array, left, array, left + 1, i - left);
 	        array[left] = tmp;
 		}

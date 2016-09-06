@@ -41,7 +41,7 @@ public class IntSortTest {
 		int array2[] = array.clone();
 		// сортируем массив и замеряем время работы
 		long startTime = System.nanoTime();
-		timSorter.apply(array);
+		timSorter.sort(array);
 		long estimatedTime = System.nanoTime() - startTime;
 		System.out.println("Timsort execution time(ms) " + (estimatedTime / 1000000));
 		startTime = System.nanoTime();
