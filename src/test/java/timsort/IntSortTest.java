@@ -30,7 +30,7 @@ public class IntSortTest {
 		int array[] = new int[size];
 		Random rnd = new Random(seed);
 		for (int i = 0; i < array.length; i++) {
-			array[i] = rnd.nextInt();
+			array[i] = rnd.nextInt(10);
 		}
 		return array;
 	}
@@ -38,14 +38,15 @@ public class IntSortTest {
 	@Test
 	public void testSortArray() throws Exception {
 		int array[] = generateRandomIntArray(ARRAY_SIZE, SEED);
-		int array2[] = array.clone();
+		int arrJava[] = array.clone();
 		// сортируем массив и замеряем время работы
 		long startTime = System.nanoTime();
 		timSorter.sort(array);
 		long estimatedTime = System.nanoTime() - startTime;
 		System.out.println("Timsort execution time(ms) " + (estimatedTime / 1000000));
+		
 		startTime = System.nanoTime();
-		Arrays.sort(array);
+		Arrays.sort(arrJava);
 		estimatedTime = System.nanoTime() - startTime;
 		System.out.println("Arrays.sort execution time(ms) " + (estimatedTime / 1000000));
 		

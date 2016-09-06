@@ -22,8 +22,6 @@ public class TimSorter {
 	// Stack of pairs with index of begin of subarray and its length 
 	private Stack<PairOfSubarray> stack;
 	
-	private int stackSize = 0;
-	
 	private final int CONST_FOR_GALOP = 7;
 
 	public int[] sort(int[] array) {
@@ -80,7 +78,7 @@ public class TimSorter {
 	private void mergeInside() {
 		int ostLength = array.length;
 		int start = 0;
-		stackSize = 0;
+		
 		do {
            
 			int curRun = 1;
@@ -89,39 +87,39 @@ public class TimSorter {
 			}
 	
             stack.push(new PairOfSubarray(start, curRun));
-            stackSize++;
-         
-            while (stackSize > 2) {
+            
+            while (stack.size() > 1) {
             	PairOfSubarray elementX = stack.pop();
             	PairOfSubarray elementY = stack.pop();
-            	PairOfSubarray elementZ = stack.pop();
-            	stackSize -= 3;
-            	if (elementX.length <= elementY.length + elementZ.length && elementY.length <= elementZ.length) {
-            		if (elementX.length < elementZ.length) {
-            			stack.push(elementZ);
-            			stackSize++;
-            			mergeStackArrays(elementX, elementY);
+            	if (stack.size() > 0 && stack.peek().length <= elementX.length + elementY.length) {
+            		if (stack.peek().length < elementX.length) {
+            			PairOfSubarray elementZ = stack.pop();
+                    	mergeStackArrays(elementZ, elementY);
+                    	stack.push(elementX);
             		} else {
-            			mergeStackArrays(elementY, elementZ);
-            			stack.push(elementX);
-            			stackSize++;
+            			mergeStackArrays(elementY, elementX);
             		}
+            	} else if (elementY.length <= elementX.length){
+            		mergeStackArrays(elementY, elementX);
             	} else {
+            		stack.push(elementY);
+            		stack.push(elementX);
             		break;
             	}
             }
        
             start += curRun;
             ostLength -= curRun;
+        
         } while (ostLength != 0);
 		
-		if (stackSize == 2) {
+		while (stack.size() != 1)
+		{
 			mergeStackArrays(stack.pop(), stack.pop());
-			stackSize -=2;
 		}
 	}
 	
-	private void mergeStackArrays(PairOfSubarray p1, PairOfSubarray p2) {
+	private void mergeStackArrays(PairOfSubarray p1, PairOfSubarray p2) {	
 		int[] result = new int[p1.length + p2.length];
 		int count = 0;
         for (int i = 0, j = p1.indexOfBegin, k = p2.indexOfBegin; i < result.length; i++){
@@ -164,7 +162,6 @@ public class TimSorter {
 		int indexBegin = Math.min(p1.indexOfBegin, p2.indexOfBegin);
 		System.arraycopy(result, 0, array, indexBegin, result.length);
 		stack.push(new PairOfSubarray(indexBegin, p1.length + p2.length));
-		stackSize++;
 	}
 	
 	private int binSearch(int low, int hight, int tmp) {
