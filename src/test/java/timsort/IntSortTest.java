@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 public class IntSortTest {
 	public static final int SEED = 1;
 	public static final int ARRAY_SIZE = 10000000;
-	public static final TimSorter timSorter = new TimSorter();
+	public static final TimSorter<Integer> timSorter = new TimSorter<Integer>();
 
 	/**
 	 *
@@ -26,8 +26,8 @@ public class IntSortTest {
 	 * @return random generated int array. It will be the same for the same seed
 	 *         and size.
 	 */
-	int[] generateRandomIntArray(int size, long seed) {
-		int array[] = new int[size];
+	Integer[] generateRandomIntArray(int size, long seed) {
+		Integer array[] = new Integer[size];
 		Random rnd = new Random(seed);
 		for (int i = 0; i < array.length; i++) {
 			array[i] = rnd.nextInt();
@@ -37,8 +37,8 @@ public class IntSortTest {
 	
 	@Test
 	public void testSortArray() throws Exception {
-		int array[] = generateRandomIntArray(ARRAY_SIZE, SEED);
-		int array2[] = array.clone();
+		Integer array[] = generateRandomIntArray(ARRAY_SIZE, SEED);
+		Integer array2[] = array.clone();
 		// сортируем массив и замеряем время работы
 		long startTime = System.nanoTime();
 		timSorter.sort(array);

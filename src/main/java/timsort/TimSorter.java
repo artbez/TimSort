@@ -13,10 +13,10 @@ import java.util.function.BinaryOperator;
  */
 
 // This class sorts the array of Comparable objects
-public class TimSorter {
+public class TimSorter<T extends Comparable<T>> {
 
 	// Initial array
-	private int[] array;
+	private T[] array;
 	// The minimum size of subarrays in the initial array 
 	private int minrun = 64;
 	// Stack of pairs with index of begin of subarray and its length 
@@ -26,7 +26,8 @@ public class TimSorter {
 	
 	private final int CONST_FOR_GALOP = 7;
 
-	public int[] sort(int[] array) {
+	public T[] sort(T[] array) {
+		assert(array != null);
 		this.array = array;
 		stack = new Stack<PairOfSubarray>();
 		minrun = getMinrun();
@@ -64,11 +65,11 @@ public class TimSorter {
 		int j = 0;
 		while (i < array.length) {
 			j = i;
-			while(j < array.length - 1 && array[j] > array[j + 1]) {
+			while(j < array.length - 1 && array[j].compareTo(array[j + 1]) > 0) {
 				j++;
 			}
 			reverseInitialArray(i, j);
-			while(j < array.length - 1 && array[j] <= array[j + 1]) {
+			while(j < array.length - 1 && array[j].compareTo(array[j + 1]) <= 0) {
 				j++;
 			}
 			int localLength = Math.min(Math.max(j - i + 1, minrun), array.length - i);
@@ -84,7 +85,7 @@ public class TimSorter {
 		do {
            
 			int curRun = 1;
-			while (start + curRun < array.length && array[start + curRun] >= array[start + curRun - 1]) {
+			while (start + curRun < array.length && array[start + curRun].compareTo(array[start + curRun - 1]) >= 0) {
 				curRun++;
 			}
 	
@@ -122,7 +123,9 @@ public class TimSorter {
 	}
 	
 	private void mergeStackArrays(PairOfSubarray p1, PairOfSubarray p2) {
-		int[] result = new int[p1.length + p2.length];
+		assert(array[0] != null);
+		@SuppressWarnings("unchecked")
+		T[] result =  (T[]) Array.newInstance(array[0].getClass(), p1.length + p2.length);
 		int count = 0;
         for (int i = 0, j = p1.indexOfBegin, k = p2.indexOfBegin; i < result.length; i++){
             if (j == p1.getEndIndex()){
@@ -134,7 +137,7 @@ public class TimSorter {
             	break;
             } 
 
-            if (array[j] < array[k]) {
+            if (array[j].compareTo(array[k]) < 0) {
             	result[i] = array[j++];
             	count = count > 0 ? count++ : 1;
             } else {
@@ -143,7 +146,7 @@ public class TimSorter {
             }
             
             if (count >= CONST_FOR_GALOP) {
-            	int tmp = array[k];
+            	T tmp = array[k];
              	int left = binSearch(j, p1.getEndIndex(), tmp);
              	System.arraycopy(array, j, result, i, left - j);
              	count = 0;
@@ -152,7 +155,7 @@ public class TimSorter {
             } 
                 
             if (count <= -CONST_FOR_GALOP) {
-            	int tmp = array[j];
+            	T tmp = array[j];
                 int left = binSearch(k, p2.getEndIndex(), tmp);
                 System.arraycopy(array, k, result, i, left - k);
                 count = 0;
@@ -167,12 +170,12 @@ public class TimSorter {
 		stackSize++;
 	}
 	
-	private int binSearch(int low, int hight, int tmp) {
+	private int binSearch(int low, int hight, T tmp) {
 		int left = low;
         int right = hight;
         while (left < right){
             int middle = (left + right) / 2;
-            if (tmp >= array[middle])
+            if (tmp.compareTo(array[middle]) >= 0)
                 left=middle + 1;
             else
                  right=middle;
@@ -181,7 +184,7 @@ public class TimSorter {
 	}
 	
 	private void swap(int i, int j) {
-		int tmp = array[i];
+		T tmp = array[i];
 		array[i] = array[j];
 		array[j] = tmp;
 	}
@@ -194,7 +197,7 @@ public class TimSorter {
 	
 	private void insertBinarySort(int low, int hight) {
 		for (int i = low + 1; i < hight; ++i) {
-			int tmp = array[i];
+			T tmp = array[i];
 			int left = binSearch(low, i, tmp);
 	        System.arraycopy(array, left, array, left + 1, i - left);
 	        array[left] = tmp;
