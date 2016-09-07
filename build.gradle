@@ -29,6 +29,11 @@ test {
   	}
 }
 
+javadoc {
+	classpath += sourceSets.test.compileClasspath
+	source += sourceSets.test.allJava
+}
+
 task compile << {
     println 'compiling source'
 }
