@@ -23,6 +23,7 @@ public class TimSorter<T extends Comparable<T>> {
 	private final int CONST_FOR_GALOP = 7;
 
 	public T[] sort(T[] array) {
+		assert(array != null);
 		this.array = array;
 		stack = new Stack<PairOfSubarray>();
 		minrun = getMinrun();

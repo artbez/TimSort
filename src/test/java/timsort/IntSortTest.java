@@ -24,7 +24,7 @@ public class IntSortTest {
 		Integer array[] = new Integer[size];
 		Random rnd = new Random(seed);
 		for (int i = 0; i < array.length; i++) {
-			array[i] = rnd.nextInt(10);
+			array[i] = rnd.nextInt();
 		}
 		return array;
 	}
