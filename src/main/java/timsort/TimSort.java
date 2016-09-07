@@ -232,7 +232,7 @@ public class TimSort<T extends Comparable<? super T>> {
 	}
 	
 	private void reverseInitialArray(int low, int hight) {
-		IntStream.range(low, (low + hight) / 2 - 1).parallel().forEach(i -> swap(i, low + hight - i));
+		IntStream.range(low, (low + hight) / 2 + 1).parallel().forEach(i -> swap(i, hight - i + low));
 	}
 	
 	private void insertBinarySort(int low, int hight) {
